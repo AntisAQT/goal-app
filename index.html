@@ -1,1 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Goal Tracker</title>
 
+<style>
+body{
+    font-family: Arial, sans-serif;
+    background:#111;
+    color:white;
+    max-width:500px;
+    margin:auto;
+    padding:20px;
+}
+
+h1{
+    text-align:center;
+}
+
+.card{
+    background:#1e1e1e;
+    padding:20px;
+    border-radius:12px;
+    margin-top:20px;
+}
+
+input{
+    width:100%;
+    padding:10px;
+    border:none;
+    border-radius:8px;
+    margin-top:10px;
+}
+
+button{
+    width:100%;
+    padding:12px;
+    margin-top:10px;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:16px;
+}
+
+.complete{
+    background:#22c55e;
+    color:white;
+}
+
+.reset{
+    background:#ef4444;
+    color:white;
+}
+
+.progress{
+    width:100%;
+    background:#333;
+    border-radius:10px;
+    overflow:hidden;
+    margin-top:15px;
+}
+
+.bar{
+    height:20px;
+    width:0%;
+    background:#22c55e;
+}
+</style>
+</head>
+
+<body>
+
+<h1>Goal Tracker</h1>
+
+<div class="card">
+
+<label>Goal Name</label>
+<input id="goalName" placeholder="Example: No Soda">
+
+<p>Target Days: <span id="target">7</span></p>
+<p>Current Streak: <span id="streak">0</span></p>
+<p>Best Streak: <span id="best">0</span></p>
+
+<div class="progress">
+<div class="bar" id="bar"></div>
+</div>
+
+<button class="complete" onclick="completeDay()">
+Completed Today
+</button>
+
+<button class="reset" onclick="resetGoal()">
+Reset Goal
+</button>
+
+</div>
+
+<script>
+
+let goalData = JSON.parse(localStorage.getItem("goalData")) || {
+    streak:0,
+    best:0,
+    target:7
+};
+
+function save(){
+    localStorage.setItem("goalData", JSON.stringify(goalData));
+    update();
+}
+
+function update(){
+
+    document.getElementById("streak").textContent = goalData.streak;
+    document.getElementById("best").textContent = goalData.best;
+    document.getElementById("target").textContent = goalData.target;
+
+    let percent = (goalData.streak / goalData.target) * 100;
+
+    if(percent > 100){
+        percent = 100;
+    }
+
+    document.getElementById("bar").style.width = percent + "%";
+}
+
+function completeDay(){
+
+    goalData.streak++;
+
+    if(goalData.streak > goalData.best){
+        goalData.best = goalData.streak;
+    }
+
+    if(goalData.streak >= goalData.target){
+
+        if(goalData.target === 7){
+            goalData.target = 30;
+        }
+        else if(goalData.target === 30){
+            goalData.target = 60;
+        }
+        else if(goalData.target === 60){
+            goalData.target = 90;
+        }
+    }
+
+    save();
+}
+
+function resetGoal(){
+    goalData.streak = 0;
+    save();
+}
+
+update();
+
+</script>
+
+</body>
+</html>
