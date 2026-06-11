@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Goal Tracker</title>
+<title>Milestone Goal Tracker</title>
 
 <style>
 *{box-sizing:border-box}
@@ -13,31 +13,30 @@ body{
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
   background:#0f0f0f;
   color:white;
-  padding:20px;
+  padding:18px;
 }
 
 .app{
-  max-width:480px;
+  max-width:500px;
   margin:auto;
 }
 
 h1{
   text-align:center;
-  margin-bottom:6px;
+  margin:10px 0 4px;
 }
 
 .sub{
   text-align:center;
   color:#aaa;
-  margin-bottom:24px;
+  margin:0 0 22px;
 }
 
 .card{
   background:#1c1c1e;
   border-radius:22px;
-  padding:20px;
+  padding:18px;
   margin-bottom:16px;
-  box-shadow:0 10px 30px rgba(0,0,0,.25);
 }
 
 label{
@@ -45,7 +44,7 @@ label{
   font-size:14px;
 }
 
-input{
+input, textarea{
   width:100%;
   margin-top:8px;
   padding:14px;
@@ -56,28 +55,20 @@ input{
   font-size:16px;
 }
 
-.stats{
-  display:grid;
-  grid-template-columns:1fr 1fr 1fr;
-  gap:10px;
-  margin-top:18px;
+textarea{
+  min-height:90px;
 }
 
-.stat{
-  background:#2c2c2e;
-  border-radius:16px;
-  padding:12px;
+.big{
+  font-size:38px;
+  font-weight:800;
   text-align:center;
+  margin:14px 0 4px;
 }
 
-.number{
-  font-size:24px;
-  font-weight:700;
-}
-
-.caption{
+.center{
+  text-align:center;
   color:#aaa;
-  font-size:12px;
 }
 
 .progress{
@@ -96,6 +87,30 @@ input{
   transition:.3s;
 }
 
+.stats{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:10px;
+  margin-top:16px;
+}
+
+.stat{
+  background:#2c2c2e;
+  border-radius:16px;
+  padding:12px;
+  text-align:center;
+}
+
+.number{
+  font-size:22px;
+  font-weight:700;
+}
+
+.caption{
+  color:#aaa;
+  font-size:12px;
+}
+
 button{
   width:100%;
   padding:15px;
@@ -111,9 +126,14 @@ button{
   color:white;
 }
 
-.disabled{
-  background:#3a3a3c;
-  color:#999;
+.secondary{
+  background:#2c2c2e;
+  color:white;
+}
+
+.warning{
+  background:#ff9f0a;
+  color:black;
 }
 
 .danger{
@@ -121,36 +141,68 @@ button{
   color:white;
 }
 
-.secondary{
-  background:#2c2c2e;
-  color:white;
+.disabled{
+  background:#3a3a3c;
+  color:#999;
 }
 
-.history{
+.milestone{
   display:flex;
-  flex-wrap:wrap;
-  gap:8px;
-  margin-top:12px;
+  align-items:center;
+  justify-content:space-between;
+  background:#2c2c2e;
+  padding:13px;
+  border-radius:15px;
+  margin-top:9px;
+}
+
+.status{
+  font-size:13px;
+  color:#aaa;
+}
+
+.calendar{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:7px;
+  margin-top:14px;
 }
 
 .day{
-  width:34px;
-  height:34px;
+  aspect-ratio:1/1;
   border-radius:50%;
   background:#2c2c2e;
   display:flex;
   align-items:center;
   justify-content:center;
   font-size:12px;
+  color:#aaa;
 }
 
 .done{
   background:#34c759;
+  color:white;
+  font-weight:700;
 }
 
-.message{
-  color:#ccc;
+.today{
+  outline:2px solid white;
+}
+
+.row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+
+.small{
+  font-size:13px;
+  color:#aaa;
   line-height:1.4;
+}
+
+.hidden{
+  display:none;
 }
 </style>
 </head>
@@ -158,60 +210,82 @@ button{
 <body>
 <div class="app">
 
-<h1>Goal Tracker</h1>
-<p class="sub">Daily progress. One check-in per day.</p>
+<h1>Milestone Tracker</h1>
+<p class="sub">Progress survives missed days. Streaks are secondary.</p>
 
 <div class="card">
-  <label>Goal</label>
-  <input id="goalInput" placeholder="Example: No soda" oninput="saveGoalName()">
+  <label>Goal Name</label>
+  <input id="goalInput" placeholder="Example: No Soda" oninput="saveGoalName()">
 
-  <div class="stats">
-    <div class="stat">
-      <div class="number" id="streak">0</div>
-      <div class="caption">Streak</div>
-    </div>
-    <div class="stat">
-      <div class="number" id="target">7</div>
-      <div class="caption">Target</div>
-    </div>
-    <div class="stat">
-      <div class="number" id="best">0</div>
-      <div class="caption">Best</div>
-    </div>
-  </div>
+  <div class="big" id="mainProgress">0 / 7</div>
+  <div class="center" id="milestoneLabel">Current milestone</div>
 
   <div class="progress">
     <div class="bar" id="bar"></div>
   </div>
 
-  <p class="message" id="message"></p>
+  <p class="small" id="message"></p>
 
   <button id="completeBtn" class="primary" onclick="completeToday()">Complete Today</button>
-  <button class="secondary" onclick="missedDay()">Missed Day</button>
-  <button class="danger" onclick="fullReset()">Full Reset</button>
+  <button id="undoBtn" class="secondary hidden" onclick="undoToday()">Undo Today</button>
 </div>
 
 <div class="card">
-  <h3>Recent Days</h3>
-  <div class="history" id="history"></div>
+  <div class="stats">
+    <div class="stat">
+      <div class="number" id="totalDays">0</div>
+      <div class="caption">Total Days</div>
+    </div>
+    <div class="stat">
+      <div class="number" id="currentStreak">0</div>
+      <div class="caption">Streak</div>
+    </div>
+    <div class="stat">
+      <div class="number" id="bestStreak">0</div>
+      <div class="caption">Best</div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <h3>Milestones</h3>
+  <div id="milestones"></div>
+</div>
+
+<div class="card">
+  <h3>Last 28 Days</h3>
+  <div class="calendar" id="calendar"></div>
+</div>
+
+<div class="card">
+  <h3>Backup</h3>
+  <button class="secondary" onclick="exportData()">Export Backup</button>
+  <textarea id="backupBox" placeholder="Backup data appears here. Paste backup here to import."></textarea>
+  <button class="secondary" onclick="importData()">Import Backup</button>
+</div>
+
+<div class="card">
+  <h3>Danger Zone</h3>
+  <p class="small">Full reset deletes all progress. It asks for confirmation first.</p>
+  <button class="danger" onclick="fullReset()">Full Reset</button>
 </div>
 
 </div>
 
 <script>
+const milestones = [7, 30, 60, 90, 180, 365];
+
 const today = () => new Date().toISOString().split("T")[0];
 
-let data = JSON.parse(localStorage.getItem("goalAppData")) || {
+let data = JSON.parse(localStorage.getItem("milestoneGoalData")) || {
   goalName:"",
-  streak:0,
-  best:0,
-  target:7,
-  lastCompleted:null,
-  completedDates:[]
+  completedDates:[],
+  bestStreak:0
 };
 
 function save(){
-  localStorage.setItem("goalAppData", JSON.stringify(data));
+  data.completedDates = [...new Set(data.completedDates)].sort();
+  localStorage.setItem("milestoneGoalData", JSON.stringify(data));
   render();
 }
 
@@ -221,85 +295,246 @@ function saveGoalName(){
 }
 
 function completeToday(){
-  const currentDate = today();
+  const date = today();
 
-  if(data.lastCompleted === currentDate){
+  if(data.completedDates.includes(date)){
     return;
   }
 
-  data.completedDates.push(currentDate);
-  data.lastCompleted = currentDate;
-  data.streak++;
+  data.completedDates.push(date);
 
-  if(data.streak > data.best){
-    data.best = data.streak;
+  const streak = calculateCurrentStreak();
+
+  if(streak > data.bestStreak){
+    data.bestStreak = streak;
   }
 
-  if(data.streak >= data.target){
-    if(data.target === 7){
-      data.target = 30;
-    } else if(data.target === 30){
-      data.target = 60;
-    } else if(data.target === 60){
-      data.target = 90;
-    } else {
-      data.target += 30;
+  save();
+}
+
+function undoToday(){
+  const date = today();
+  data.completedDates = data.completedDates.filter(d => d !== date);
+  save();
+}
+
+function getCurrentMilestone(){
+  const total = data.completedDates.length;
+
+  for(let m of milestones){
+    if(total < m){
+      return m;
     }
   }
 
-  save();
+  let extra = milestones[milestones.length - 1];
+
+  while(total >= extra){
+    extra += 365;
+  }
+
+  return extra;
 }
 
-function missedDay(){
-  data.streak = 0;
-  save();
+function getPreviousMilestone(){
+  const total = data.completedDates.length;
+  let previous = 0;
+
+  for(let m of milestones){
+    if(total >= m){
+      previous = m;
+    }
+  }
+
+  if(total >= 365){
+    previous = Math.floor(total / 365) * 365;
+  }
+
+  return previous;
+}
+
+function calculateCurrentStreak(){
+  let streak = 0;
+  let date = new Date();
+
+  while(true){
+    const check = date.toISOString().split("T")[0];
+
+    if(data.completedDates.includes(check)){
+      streak++;
+      date.setDate(date.getDate() - 1);
+    } else {
+      break;
+    }
+  }
+
+  return streak;
+}
+
+function calculateBestStreak(){
+  if(data.completedDates.length === 0){
+    return 0;
+  }
+
+  let sorted = [...data.completedDates].sort();
+  let best = 1;
+  let current = 1;
+
+  for(let i = 1; i < sorted.length; i++){
+    let prev = new Date(sorted[i - 1]);
+    let curr = new Date(sorted[i]);
+
+    let diff = (curr - prev) / 86400000;
+
+    if(diff === 1){
+      current++;
+    } else {
+      current = 1;
+    }
+
+    if(current > best){
+      best = current;
+    }
+  }
+
+  return best;
+}
+
+function renderMilestones(){
+  const box = document.getElementById("milestones");
+  box.innerHTML = "";
+
+  const total = data.completedDates.length;
+  const active = getCurrentMilestone();
+
+  milestones.forEach(m => {
+    const row = document.createElement("div");
+    row.className = "milestone";
+
+    let status = "Locked";
+
+    if(total >= m){
+      status = "Completed";
+    } else if(m === active){
+      status = "Active";
+    }
+
+    row.innerHTML = `
+      <strong>${m} days</strong>
+      <span class="status">${status}</span>
+    `;
+
+    box.appendChild(row);
+  });
+}
+
+function renderCalendar(){
+  const box = document.getElementById("calendar");
+  box.innerHTML = "";
+
+  let date = new Date();
+  date.setDate(date.getDate() - 27);
+
+  for(let i = 0; i < 28; i++){
+    const dateString = date.toISOString().split("T")[0];
+    const div = document.createElement("div");
+
+    div.className = "day";
+    div.textContent = date.getDate();
+
+    if(data.completedDates.includes(dateString)){
+      div.classList.add("done");
+    }
+
+    if(dateString === today()){
+      div.classList.add("today");
+    }
+
+    box.appendChild(div);
+    date.setDate(date.getDate() + 1);
+  }
+}
+
+function exportData(){
+  document.getElementById("backupBox").value = JSON.stringify(data, null, 2);
+}
+
+function importData(){
+  try{
+    const imported = JSON.parse(document.getElementById("backupBox").value);
+
+    if(!imported.completedDates || !Array.isArray(imported.completedDates)){
+      alert("Invalid backup.");
+      return;
+    }
+
+    data = imported;
+
+    if(!data.bestStreak){
+      data.bestStreak = calculateBestStreak();
+    }
+
+    save();
+    alert("Backup imported.");
+  } catch(e){
+    alert("Invalid backup.");
+  }
 }
 
 function fullReset(){
+  const confirmReset = confirm("Delete all progress permanently?");
+
+  if(!confirmReset){
+    return;
+  }
+
   data = {
     goalName:"",
-    streak:0,
-    best:0,
-    target:7,
-    lastCompleted:null,
-    completedDates:[]
+    completedDates:[],
+    bestStreak:0
   };
+
   save();
 }
 
 function render(){
-  document.getElementById("goalInput").value = data.goalName;
-  document.getElementById("streak").textContent = data.streak;
-  document.getElementById("target").textContent = data.target;
-  document.getElementById("best").textContent = data.best;
+  const total = data.completedDates.length;
+  const currentMilestone = getCurrentMilestone();
+  const previousMilestone = getPreviousMilestone();
+  const progressInsideMilestone = total - previousMilestone;
+  const milestoneSize = currentMilestone - previousMilestone;
+  const percent = Math.min((progressInsideMilestone / milestoneSize) * 100, 100);
+  const streak = calculateCurrentStreak();
+  const best = Math.max(data.bestStreak || 0, calculateBestStreak());
 
-  let percent = Math.min((data.streak / data.target) * 100, 100);
+  data.bestStreak = best;
+
+  document.getElementById("goalInput").value = data.goalName;
+  document.getElementById("mainProgress").textContent = `${progressInsideMilestone} / ${milestoneSize}`;
+  document.getElementById("milestoneLabel").textContent = `${currentMilestone}-day milestone`;
   document.getElementById("bar").style.width = percent + "%";
 
-  const btn = document.getElementById("completeBtn");
+  document.getElementById("totalDays").textContent = total;
+  document.getElementById("currentStreak").textContent = streak;
+  document.getElementById("bestStreak").textContent = best;
 
-  if(data.lastCompleted === today()){
-    btn.textContent = "Completed Today";
-    btn.className = "disabled";
-    document.getElementById("message").textContent = "Today is already counted. Come back tomorrow.";
+  const completeBtn = document.getElementById("completeBtn");
+  const undoBtn = document.getElementById("undoBtn");
+
+  if(data.completedDates.includes(today())){
+    completeBtn.textContent = "Completed Today";
+    completeBtn.className = "disabled";
+    undoBtn.classList.remove("hidden");
+    document.getElementById("message").textContent = "Today is counted. Your milestone progress is saved.";
   } else {
-    btn.textContent = "Complete Today";
-    btn.className = "primary";
-    document.getElementById("message").textContent = `${data.target - data.streak} day(s) left until the next upgrade.`;
+    completeBtn.textContent = "Complete Today";
+    completeBtn.className = "primary";
+    undoBtn.classList.add("hidden");
+    document.getElementById("message").textContent = `${milestoneSize - progressInsideMilestone} completed day(s) left for this milestone.`;
   }
 
-  const history = document.getElementById("history");
-  history.innerHTML = "";
-
-  const recent = data.completedDates.slice(-21);
-
-  recent.forEach((date, index) => {
-    const div = document.createElement("div");
-    div.className = "day done";
-    div.textContent = index + 1;
-    div.title = date;
-    history.appendChild(div);
-  });
+  renderMilestones();
+  renderCalendar();
 }
 
 render();
