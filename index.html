@@ -6,156 +6,303 @@
 <title>Goal Tracker</title>
 
 <style>
+*{box-sizing:border-box}
+
 body{
-    font-family: Arial, sans-serif;
-    background:#111;
-    color:white;
-    max-width:500px;
-    margin:auto;
-    padding:20px;
+  margin:0;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+  background:#0f0f0f;
+  color:white;
+  padding:20px;
+}
+
+.app{
+  max-width:480px;
+  margin:auto;
 }
 
 h1{
-    text-align:center;
+  text-align:center;
+  margin-bottom:6px;
+}
+
+.sub{
+  text-align:center;
+  color:#aaa;
+  margin-bottom:24px;
 }
 
 .card{
-    background:#1e1e1e;
-    padding:20px;
-    border-radius:12px;
-    margin-top:20px;
+  background:#1c1c1e;
+  border-radius:22px;
+  padding:20px;
+  margin-bottom:16px;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+}
+
+label{
+  color:#aaa;
+  font-size:14px;
 }
 
 input{
-    width:100%;
-    padding:10px;
-    border:none;
-    border-radius:8px;
-    margin-top:10px;
+  width:100%;
+  margin-top:8px;
+  padding:14px;
+  border:none;
+  border-radius:14px;
+  background:#2c2c2e;
+  color:white;
+  font-size:16px;
 }
 
-button{
-    width:100%;
-    padding:12px;
-    margin-top:10px;
-    border:none;
-    border-radius:8px;
-    cursor:pointer;
-    font-size:16px;
+.stats{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:10px;
+  margin-top:18px;
 }
 
-.complete{
-    background:#22c55e;
-    color:white;
+.stat{
+  background:#2c2c2e;
+  border-radius:16px;
+  padding:12px;
+  text-align:center;
 }
 
-.reset{
-    background:#ef4444;
-    color:white;
+.number{
+  font-size:24px;
+  font-weight:700;
+}
+
+.caption{
+  color:#aaa;
+  font-size:12px;
 }
 
 .progress{
-    width:100%;
-    background:#333;
-    border-radius:10px;
-    overflow:hidden;
-    margin-top:15px;
+  width:100%;
+  height:18px;
+  background:#333;
+  border-radius:999px;
+  overflow:hidden;
+  margin-top:18px;
 }
 
 .bar{
-    height:20px;
-    width:0%;
-    background:#22c55e;
+  height:100%;
+  width:0%;
+  background:#34c759;
+  transition:.3s;
+}
+
+button{
+  width:100%;
+  padding:15px;
+  border:none;
+  border-radius:16px;
+  font-size:16px;
+  font-weight:700;
+  margin-top:12px;
+}
+
+.primary{
+  background:#34c759;
+  color:white;
+}
+
+.disabled{
+  background:#3a3a3c;
+  color:#999;
+}
+
+.danger{
+  background:#ff453a;
+  color:white;
+}
+
+.secondary{
+  background:#2c2c2e;
+  color:white;
+}
+
+.history{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:12px;
+}
+
+.day{
+  width:34px;
+  height:34px;
+  border-radius:50%;
+  background:#2c2c2e;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:12px;
+}
+
+.done{
+  background:#34c759;
+}
+
+.message{
+  color:#ccc;
+  line-height:1.4;
 }
 </style>
 </head>
 
 <body>
+<div class="app">
 
 <h1>Goal Tracker</h1>
+<p class="sub">Daily progress. One check-in per day.</p>
 
 <div class="card">
+  <label>Goal</label>
+  <input id="goalInput" placeholder="Example: No soda" oninput="saveGoalName()">
 
-<label>Goal Name</label>
-<input id="goalName" placeholder="Example: No Soda">
+  <div class="stats">
+    <div class="stat">
+      <div class="number" id="streak">0</div>
+      <div class="caption">Streak</div>
+    </div>
+    <div class="stat">
+      <div class="number" id="target">7</div>
+      <div class="caption">Target</div>
+    </div>
+    <div class="stat">
+      <div class="number" id="best">0</div>
+      <div class="caption">Best</div>
+    </div>
+  </div>
 
-<p>Target Days: <span id="target">7</span></p>
-<p>Current Streak: <span id="streak">0</span></p>
-<p>Best Streak: <span id="best">0</span></p>
+  <div class="progress">
+    <div class="bar" id="bar"></div>
+  </div>
 
-<div class="progress">
-<div class="bar" id="bar"></div>
+  <p class="message" id="message"></p>
+
+  <button id="completeBtn" class="primary" onclick="completeToday()">Complete Today</button>
+  <button class="secondary" onclick="missedDay()">Missed Day</button>
+  <button class="danger" onclick="fullReset()">Full Reset</button>
 </div>
 
-<button class="complete" onclick="completeDay()">
-Completed Today
-</button>
-
-<button class="reset" onclick="resetGoal()">
-Reset Goal
-</button>
+<div class="card">
+  <h3>Recent Days</h3>
+  <div class="history" id="history"></div>
+</div>
 
 </div>
 
 <script>
+const today = () => new Date().toISOString().split("T")[0];
 
-let goalData = JSON.parse(localStorage.getItem("goalData")) || {
-    streak:0,
-    best:0,
-    target:7
+let data = JSON.parse(localStorage.getItem("goalAppData")) || {
+  goalName:"",
+  streak:0,
+  best:0,
+  target:7,
+  lastCompleted:null,
+  completedDates:[]
 };
 
 function save(){
-    localStorage.setItem("goalData", JSON.stringify(goalData));
-    update();
+  localStorage.setItem("goalAppData", JSON.stringify(data));
+  render();
 }
 
-function update(){
+function saveGoalName(){
+  data.goalName = document.getElementById("goalInput").value;
+  save();
+}
 
-    document.getElementById("streak").textContent = goalData.streak;
-    document.getElementById("best").textContent = goalData.best;
-    document.getElementById("target").textContent = goalData.target;
+function completeToday(){
+  const currentDate = today();
 
-    let percent = (goalData.streak / goalData.target) * 100;
+  if(data.lastCompleted === currentDate){
+    return;
+  }
 
-    if(percent > 100){
-        percent = 100;
+  data.completedDates.push(currentDate);
+  data.lastCompleted = currentDate;
+  data.streak++;
+
+  if(data.streak > data.best){
+    data.best = data.streak;
+  }
+
+  if(data.streak >= data.target){
+    if(data.target === 7){
+      data.target = 30;
+    } else if(data.target === 30){
+      data.target = 60;
+    } else if(data.target === 60){
+      data.target = 90;
+    } else {
+      data.target += 30;
     }
+  }
 
-    document.getElementById("bar").style.width = percent + "%";
+  save();
 }
 
-function completeDay(){
-
-    goalData.streak++;
-
-    if(goalData.streak > goalData.best){
-        goalData.best = goalData.streak;
-    }
-
-    if(goalData.streak >= goalData.target){
-
-        if(goalData.target === 7){
-            goalData.target = 30;
-        }
-        else if(goalData.target === 30){
-            goalData.target = 60;
-        }
-        else if(goalData.target === 60){
-            goalData.target = 90;
-        }
-    }
-
-    save();
+function missedDay(){
+  data.streak = 0;
+  save();
 }
 
-function resetGoal(){
-    goalData.streak = 0;
-    save();
+function fullReset(){
+  data = {
+    goalName:"",
+    streak:0,
+    best:0,
+    target:7,
+    lastCompleted:null,
+    completedDates:[]
+  };
+  save();
 }
 
-update();
+function render(){
+  document.getElementById("goalInput").value = data.goalName;
+  document.getElementById("streak").textContent = data.streak;
+  document.getElementById("target").textContent = data.target;
+  document.getElementById("best").textContent = data.best;
 
+  let percent = Math.min((data.streak / data.target) * 100, 100);
+  document.getElementById("bar").style.width = percent + "%";
+
+  const btn = document.getElementById("completeBtn");
+
+  if(data.lastCompleted === today()){
+    btn.textContent = "Completed Today";
+    btn.className = "disabled";
+    document.getElementById("message").textContent = "Today is already counted. Come back tomorrow.";
+  } else {
+    btn.textContent = "Complete Today";
+    btn.className = "primary";
+    document.getElementById("message").textContent = `${data.target - data.streak} day(s) left until the next upgrade.`;
+  }
+
+  const history = document.getElementById("history");
+  history.innerHTML = "";
+
+  const recent = data.completedDates.slice(-21);
+
+  recent.forEach((date, index) => {
+    const div = document.createElement("div");
+    div.className = "day done";
+    div.textContent = index + 1;
+    div.title = date;
+    history.appendChild(div);
+  });
+}
+
+render();
 </script>
 
 </body>
